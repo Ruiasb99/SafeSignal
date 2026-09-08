@@ -1,6 +1,5 @@
 package com.example.emergencybutton.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +18,15 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = SafeColors.Primary,
+    onPrimary = Color.White,
+    secondaryContainer = SafeColors.Navigation,
+    onSecondaryContainer = Color(0xFF18328B),
+    onSurface = SafeColors.Ink,
+    onBackground = SafeColors.Ink,
     secondary = PurpleGrey40,
     tertiary = Pink40,
-    background = Color(0xFFF4F7F8),
+    background = SafeColors.Background,
     surface = Color(0xFFFFFFFF),
     error = Color(0xFFBA1A1A)
 )

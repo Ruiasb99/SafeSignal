@@ -8,11 +8,22 @@ import android.os.Bundle
 import android.os.Build
 import com.example.emergencybutton.platform.ButtonMonitoringService
 import android.provider.Settings
+import android.provider.ContactsContract.CommonDataKinds.Phone
+import com.example.emergencybutton.platform.AndroidContactNumberReader
+import android.content.ActivityNotFoundException
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.emergencybutton.ui.EmergencyApp
@@ -56,8 +67,33 @@ class MainActivity : ComponentActivity() {
             } else container.ble.message("Nearby devices permission is required. You can allow it in Android app settings")
         }
 
+    private val contactPicker = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode != RESULT_OK) return@registerForActivityResult
+        val uri = result.data?.data ?: return@registerForActivityResult
+        if (uri.scheme != "content") return@registerForActivityResult
+        lifecycleScope.launch {
+            try {
+                val number = withContext(Dispatchers.IO) { AndroidContactNumberReader(this@MainActivity).read(uri) }
+                if (number.isNullOrBlank()) contactPickerError() else viewModel.contactPicked(number)
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { contactPickerError() }
+        }
+    }
+
+    private fun pickContact() {
+        try {
+            contactPicker.launch(Intent(Intent.ACTION_PICK).apply { type = Phone.CONTENT_TYPE })
+        } catch (_: ActivityNotFoundException) { contactPickerError() }
+    }
+
+    private fun contactPickerError() {
+        Toast.makeText(this, "Could not read that phone number. You can enter it manually instead.", Toast.LENGTH_LONG).show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.light(0xFFF4F6FC.toInt(), 0xFFF4F6FC.toInt()))
         setContent {
             val buttonState by container.ble.states.collectAsState()
             EmergencyApp(
@@ -78,6 +114,7 @@ class MainActivity : ComponentActivity() {
                 onStopButton = { stopService(Intent(this, ButtonMonitoringService::class.java)) },
                 onSelectButton = container.ble::remember,
                 onForgetButton = container.ble::forget,
+                onPickContact = ::pickContact,
                 onStopButtonScan = container.ble::stopDiscovery
             )
         }

@@ -44,6 +44,22 @@ class EmergencyViewModelTest {
         assertNull(vm.state.editingContact)
     }
 
+    @Test fun pickingContactOnlyFillsDraftUntilUserSaves() {
+        val fixture = Fixture()
+        fixture.vm.contactPicked(first)
+        assertEquals(first, fixture.vm.state.contactDraft)
+        assertTrue(fixture.repository.contacts.isEmpty())
+        fixture.vm.saveContact()
+        assertEquals(listOf(first), fixture.repository.contacts)
+    }
+
+    @Test fun latePickerResultDoesNotChangeAnotherScreen() {
+        val fixture = Fixture(listOf(first))
+        fixture.vm.contactPicked(second)
+        assertEquals("", fixture.vm.state.contactDraft)
+        assertEquals(listOf(first), fixture.repository.contacts)
+    }
+
     @Test fun invalidContactDoesNotPersist() {
         val fixture = Fixture()
         fixture.vm.updateContactDraft("invalid")

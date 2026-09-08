@@ -40,6 +40,12 @@ class EmergencyViewModel(
         }
     }
 
+    fun contactPicked(number: String) {
+        if (state.screen != AppScreen.CONTACTS) return
+        updateContactDraft(number)
+        state = state.copy(status = "Number selected. Review it and its country code before saving.")
+    }
+
     fun updateContactDraft(value: String) { state = state.copy(contactDraft = value) }
     fun updateCurrentPin(value: String) { state = state.copy(currentPinDraft = sanitizePin(value)) }
     fun updateNewPin(value: String) { state = state.copy(newPinDraft = sanitizePin(value)) }

@@ -1,5 +1,6 @@
 package com.example.emergencybutton.ui.screens
 
+import com.example.emergencybutton.ui.theme.SafeColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,11 +22,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -43,6 +46,7 @@ fun ContactManagementScreen(
     editingContact: String?,
     status: String,
     onContactDraftChange: (String) -> Unit,
+    onPickContact: () -> Unit,
     onSaveContact: () -> Unit,
     onEditContact: (String) -> Unit,
     onRemoveContact: (String) -> Unit,
@@ -50,7 +54,15 @@ fun ContactManagementScreen(
     onAppContacts: () -> Unit,
     onBack: () -> Unit
 ) {
+    var removing by remember { mutableStateOf<String?>(null) }
     BackHandler(onBack = onBack)
+    removing?.let { number ->
+        AlertDialog(onDismissRequest = { removing = null },
+            title = { Text("Remove SMS contact?") },
+            text = { Text("This number will no longer receive new SOS alerts. An active alert keeps its original recipients.") },
+            confirmButton = { TextButton(onClick = { onRemoveContact(number); removing = null }) { Text("Remove") } },
+            dismissButton = { TextButton(onClick = { removing = null }) { Text("Keep contact") } })
+    }
 
     Column(
         modifier = Modifier
@@ -58,7 +70,7 @@ fun ContactManagementScreen(
             .verticalScroll(rememberScrollState())
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFEAF5F6), Color(0xFFF8F9FB))
+                    listOf(SafeColors.Background, SafeColors.Background)
                 )
             )
             .padding(horizontal = 20.dp, vertical = 20.dp)
@@ -68,11 +80,11 @@ fun ContactManagementScreen(
             modifier = Modifier.fillMaxWidth(),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF14343E)
+            color = SafeColors.Ink
         )
 
         Spacer(modifier = Modifier.height(18.dp))
-        OutlinedButton(onClick = onAppContacts, modifier = Modifier.fillMaxWidth()) {
+        FilledTonalButton(onClick = onAppContacts, modifier = Modifier.fillMaxWidth()) {
             Text("Manage app contacts")
         }
         Text(
@@ -81,7 +93,7 @@ fun ContactManagementScreen(
             } else {
                 "Every saved contact receives your emergency alerts."
             },
-            color = Color(0xFF557078)
+            color = SafeColors.Muted
         )
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -106,12 +118,12 @@ fun ContactManagementScreen(
                     Box(
                         modifier = Modifier
                             .size(34.dp)
-                            .background(Color(0xFFD9ECEF), CircleShape),
+                            .background(SafeColors.Mint, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             (index + 1).toString(),
-                            color = Color(0xFF174A5B),
+                            color = SafeColors.Forest,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -128,7 +140,7 @@ fun ContactManagementScreen(
                     TextButton(onClick = { onEditContact(number) }) {
                         Text("Edit", fontSize = 12.sp)
                     }
-                    TextButton(onClick = { onRemoveContact(number) }) {
+                    TextButton(onClick = { removing = number }) {
                         Text("Remove", color = Color(0xFFB3261E), fontSize = 12.sp)
                     }
                 }
@@ -149,13 +161,19 @@ fun ContactManagementScreen(
                     color = Color(0xFF243A41)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
+                Button(onClick = onPickContact, modifier = Modifier.fillMaxWidth()) {
+                    Text("Choose from phone contacts")
+                }
+                Text("Or enter a number below. Check its country code before saving.",
+                    style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(
                     value = contactDraft,
                     onValueChange = onContactDraftChange,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    label = { Text("Phone number with country code") },
+                    label = { Text("Phone number") },
                     placeholder = { Text("+49 123 456789") },
+                    supportingText = { Text("Include country code, e.g. +351 or +49") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true
                 )
@@ -166,7 +184,7 @@ fun ContactManagementScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF174A5B)
+                        containerColor = SafeColors.Primary
                     )
                 ) {
                     Text(if (editingContact == null) "Save contact" else "Update contact")
@@ -183,19 +201,12 @@ fun ContactManagementScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
-        Text(
+        if (status != "Ready") Text(
             status,
             modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF52676E),
+            color = SafeColors.Muted,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(10.dp))
-        OutlinedButton(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text("Back to dashboard")
-        }
     }
 }

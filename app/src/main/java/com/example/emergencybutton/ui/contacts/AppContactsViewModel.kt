@@ -12,6 +12,7 @@ data class AppContactsState(
     val busy: Boolean = false,
     val codeDraft: String = "",
     val preview: ContactInvitation? = null,
+    val createdInvitation: ContactInvitation? = null,
     val invitations: List<ContactInvitation> = emptyList(),
     val status: String = ""
 )
@@ -39,7 +40,7 @@ class AppContactsViewModel(private val repository: AppContactsRepository) : View
                     if (session != generation) return@observe
                     update.fold(
                         onSuccess = { state = state.copy(ready = true, invitations = it, status = "App contacts are up to date.") },
-                        onFailure = { state = state.copy(ready = false, invitations = emptyList(), preview = null, status = it.message.orEmpty()) }
+                        onFailure = { state = state.copy(ready = false, invitations = emptyList(), preview = null, createdInvitation = null, status = it.message.orEmpty()) }
                     )
                 }
                 state = state.copy(busy = false)
@@ -52,14 +53,16 @@ class AppContactsViewModel(private val repository: AppContactsRepository) : View
         if (!state.busy) state = state.copy(codeDraft = value, preview = null)
     }
 
+    fun dismissCreatedInvitation() { state = state.copy(createdInvitation = null) }
+
     fun create() {
         val user = activeUser() ?: return
         val session = generation
         state = state.copy(busy = true)
         repository.create(user) { result ->
             if (session != generation) return@create
-            state = state.copy(busy = false, status = result.fold(
-                { "Invitation created. Copy its private code below and share it with the person you trust." },
+            state = state.copy(busy = false, createdInvitation = result.getOrNull(), status = result.fold(
+                { "Invitation created. Share its private code with someone you trust." },
                 { it.message.orEmpty() }))
         }
     }

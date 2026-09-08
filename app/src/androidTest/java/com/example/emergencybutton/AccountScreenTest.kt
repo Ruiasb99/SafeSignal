@@ -37,7 +37,7 @@ class AccountScreenTest {
         show(AccountUiState(configured = true, form = AccountForm.RESET_PASSWORD)) { backCount++ }
         compose.onNodeWithText("Reset your password").assertIsDisplayed()
         compose.onNodeWithText("Send reset link").assertIsDisplayed()
-        compose.onNodeWithText("Back to settings").performScrollTo().performClick()
+        compose.onNodeWithText("Back to settings").assertIsDisplayed().performClick()
         assertEquals(1, backCount)
     }
 
@@ -54,6 +54,7 @@ class AccountScreenTest {
         val state = mutableStateOf(initial)
         compose.setContent {
             EmergencyButtonTheme(dynamicColor = false) {
+                com.example.emergencybutton.ui.components.PageFrame("Back to settings", onBack) {
                 AccountScreen(
                     state = state.value,
                     onEmailChange = {}, onPasswordChange = {}, onConfirmationChange = {}, onNameChange = {},
@@ -61,6 +62,7 @@ class AccountScreenTest {
                     onSubmit = {}, onSaveName = {}, onSendVerification = {}, onRefresh = {},
                     onResetPassword = {}, onSignOut = {}, onBack = onBack
                 )
+                }
             }
         }
     }

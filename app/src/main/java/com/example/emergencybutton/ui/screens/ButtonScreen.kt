@@ -1,5 +1,6 @@
 package com.example.emergencybutton.ui.screens
 
+import com.example.emergencybutton.ui.theme.SafeColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,10 +24,10 @@ fun ButtonScreen(state: BleState, onScan: () -> Unit, onStart: () -> Unit,
     BackHandler(onBack = onBack)
     val stopScan by rememberUpdatedState(onStopScan)
     DisposableEffect(Unit) { onDispose { stopScan() } }
-    Column(Modifier.fillMaxSize().background(Color(0xFFEAF5F6)).safeDrawingPadding()
+    Column(Modifier.fillMaxSize().background(SafeColors.Background)
         .verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Your emergency button", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF163C48))) {
+        Card(colors = CardDefaults.cardColors(containerColor = SafeColors.Panel)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(state.status, color = Color.White, style = MaterialTheme.typography.titleMedium)
                 Text("Press 3 or more times within 2 seconds. SOS starts on press 3; extra presses won't resend while an emergency is active.",
@@ -56,7 +57,6 @@ fun ButtonScreen(state: BleState, onScan: () -> Unit, onStart: () -> Unit,
         }
         Text("Prototype: test with a consenting contact. After reboot, force-stop or Android stopping the service, reopen this page and start monitoring again. BLE is not yet securely bonded.",
             style = MaterialTheme.typography.bodySmall)
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) { Text("Back to dashboard") }
     }
     if (confirmStart) AlertDialog(onDismissRequest = { confirmStart = false },
         title = { Text("Enable real SOS messages?") },

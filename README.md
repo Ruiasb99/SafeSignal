@@ -8,11 +8,12 @@ Built with **Kotlin, Jetpack Compose, Android BLE, foreground services, WorkMana
 
 - Three physical presses within two seconds trigger an alert. Extra presses during the active incident do not resend it.
 - An initial SMS includes the latest cached location when available. A current-location request then sends a second SMS with a Maps link.
-- Contact creation, editing and removal; PIN-protected cancellation notifies the original incident recipients.
+- Contact creation, editing and confirmed removal, with Android's phone-contact picker or manual number entry; PIN-protected cancellation notifies the original incident recipients.
 - BLE scanning, explicit device selection, notification subscription and reconnect attempts with backoff.
 - User-started background monitoring with an Android foreground-service notification.
 - Cached-location refresh: approximately 15 minutes in Armed mode, two hours in Low Power, none in Off. These settings are independent of BLE monitoring.
 - Optional email/password accounts, verification, reset emails and accepted private invitations.
+- System-bar-safe navigation and immediate invitation-code feedback; see the [UX review](docs/UX_REVIEW.md).
 
 **Status:** ongoing prototype. The physical button → BLE → SMS flow and two-account invitations have been tested manually on a Xiaomi Redmi Note 15 running Android 15. Process-death recovery, authenticated BLE pairing and broader device testing remain open. SMS submission is not proof of delivery.
 

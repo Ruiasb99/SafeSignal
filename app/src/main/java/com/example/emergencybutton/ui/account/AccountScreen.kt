@@ -1,5 +1,6 @@
 package com.example.emergencybutton.ui.account
 
+import com.example.emergencybutton.ui.theme.SafeColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,9 +39,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
-private val AccountInk = Color(0xFF14343E)
-private val AccountMuted = Color(0xFF557078)
-private val AccountTeal = Color(0xFF174A5B)
+private val AccountInk = SafeColors.Ink
+private val AccountMuted = SafeColors.Muted
+private val AccountTeal = SafeColors.Primary
 
 @Composable
 fun AccountScreen(
@@ -62,8 +62,8 @@ fun AccountScreen(
     BackHandler(onBack = onBack)
     Column(
         modifier = Modifier.fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFFEAF5F6), Color(0xFFF8F9FB))))
-            .imePadding()
+            .background(Brush.verticalGradient(listOf(SafeColors.Background, SafeColors.Background)))
+
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -165,7 +165,7 @@ fun AccountScreen(
             Text("Working on your account…", color = AccountMuted)
         }
         if (state.status.isNotEmpty()) {
-            AccountCard(color = if (state.isError) Color(0xFFFFE8E6) else Color(0xFFD9ECEF)) {
+            AccountCard(color = if (state.isError) Color(0xFFFFE8E6) else SafeColors.Navigation) {
                 Text(state.status, color = if (state.isError) Color(0xFF9F1C1C) else AccountInk)
             }
         }
@@ -176,9 +176,6 @@ fun AccountScreen(
                 modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
                 Text("Sign out", color = AccountTeal)
             }
-        }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text("Back to settings")
         }
         Spacer(Modifier.height(4.dp))
     }

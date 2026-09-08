@@ -138,6 +138,39 @@ class AppContactsViewModelTest {
         assertEquals("You already support this person.", vm.state.status)
     }
 
+    @Test fun createdCodeIsAvailableImmediatelyWithoutWaitingForTheList() {
+        val repo = FakeContacts()
+        val vm = ready(repo, alice)
+        vm.create()
+        repo.created!!(Result.success(invite))
+        assertEquals(invite, vm.state.createdInvitation)
+        assertTrue(vm.state.invitations.isEmpty())
+        assertFalse(vm.state.busy)
+        vm.dismissCreatedInvitation()
+        assertNull(vm.state.createdInvitation)
+    }
+
+    @Test fun failedCreationDoesNotShowSuccessDialog() {
+        val repo = FakeContacts()
+        val vm = ready(repo, alice)
+        vm.create()
+        repo.created!!(Result.failure(Exception("Try again")))
+        assertNull(vm.state.createdInvitation)
+        assertEquals("Try again", vm.state.status)
+        assertFalse(vm.state.busy)
+    }
+
+    @Test fun leavingPageClearsCodeAndLateCreationCannotReopenDialog() {
+        val repo = FakeContacts()
+        val vm = ready(repo, alice)
+        vm.create()
+        repo.created!!(Result.success(invite))
+        vm.bind(null)
+        assertNull(vm.state.createdInvitation)
+        repo.created!!(Result.success(invite))
+        assertNull(vm.state.createdInvitation)
+    }
+
     private fun ready(repo: FakeContacts, user: AccountUser): AppContactsViewModel {
         val vm = AppContactsViewModel(repo)
         vm.bind(user)

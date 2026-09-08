@@ -1,5 +1,6 @@
 package com.example.emergencybutton.ui.contacts
 
+import com.example.emergencybutton.ui.theme.SafeColors
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,28 @@ fun AppContactsScreen(viewModel: AppContactsViewModel, onAccount: () -> Unit, on
     val state = viewModel.state
     val clipboard = LocalClipboardManager.current
     var removing by remember { mutableStateOf<ContactInvitation?>(null) }
+    state.createdInvitation?.let { invitation ->
+        var copied by remember(invitation.code) { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = viewModel::dismissCreatedInvitation,
+            title = { Text("Invitation ready") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Share this code privately with someone you trust. It expires in about six days.")
+                    androidx.compose.foundation.text.selection.SelectionContainer {
+                        Text(invitation.code, fontWeight = FontWeight.Bold)
+                    }
+                    if (copied) Text("Code copied — ready to paste.", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { clipboard.setText(AnnotatedString(invitation.code)); copied = true }) {
+                    Text(if (copied) "Copy again" else "Copy private code")
+                }
+            },
+            dismissButton = { TextButton(onClick = viewModel::dismissCreatedInvitation) { Text("Done") } }
+        )
+    }
     BackHandler(onBack = onBack)
     removing?.let { invitation ->
         AlertDialog(onDismissRequest = { removing = null }, title = { Text("Remove this connection?") },
@@ -32,14 +55,14 @@ fun AppContactsScreen(viewModel: AppContactsViewModel, onAccount: () -> Unit, on
             dismissButton = { TextButton(onClick = { removing = null }) { Text("Keep") } })
     }
     Column(Modifier.fillMaxSize()
-        .background(Brush.verticalGradient(listOf(Color(0xFFEAF5F6), Color(0xFFF8F9FB))))
-        .imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
+        .background(Brush.verticalGradient(listOf(SafeColors.Background, SafeColors.Background)))
+        .verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text("App contacts", style = MaterialTheme.typography.headlineMedium,
-            color = Color(0xFF14343E), fontWeight = FontWeight.Bold)
-        Text("Connect with people you trust.", color = Color(0xFF557078))
+            color = SafeColors.Ink, fontWeight = FontWeight.Bold)
+        Text("Connect with people you trust.", color = SafeColors.Muted)
         ContactCard {
-            Text("Connections only for now", fontWeight = FontWeight.Bold)
+            Text("SMS delivers your SOS", fontWeight = FontWeight.Bold)
             Text("App notifications are on hold. SOS sends only to the phone numbers in your SMS contacts.")
         }
         val user = state.user
@@ -54,13 +77,13 @@ fun AppContactsScreen(viewModel: AppContactsViewModel, onAccount: () -> Unit, on
             }
             else -> {
                 if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                Text(state.status, color = Color(0xFF557078))
+                Text(state.status, color = SafeColors.Muted)
                 OutlinedButton(onClick = viewModel::refresh, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
                     Text("Refresh contacts")
                 }
                 ContactCard {
                     Text("Invite someone to support you", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("Create a private code and send it to someone you know. Anyone with the code can accept it, so share it privately. It expires in about six days.")
+                    Text("Create a private code for someone you trust. App alert delivery is not active yet.")
                     Button(onClick = viewModel::create, enabled = state.ready && !state.busy,
                         modifier = Modifier.fillMaxWidth()) { Text("Create invitation") }
                 }
@@ -69,7 +92,7 @@ fun AppContactsScreen(viewModel: AppContactsViewModel, onAccount: () -> Unit, on
                     OutlinedTextField(value = state.codeDraft, onValueChange = viewModel::updateCode,
                         modifier = Modifier.fillMaxWidth(), label = { Text("Paste invitation code") },
                         enabled = !state.busy, singleLine = true)
-                    Button(onClick = viewModel::preview, enabled = state.ready && !state.busy) { Text("Preview invitation") }
+                    Button(onClick = viewModel::preview, enabled = state.ready && !state.busy && state.codeDraft.isNotBlank()) { Text("Preview invitation") }
                     state.preview?.let { invitation ->
                         Text("${invitation.fromName} wants to choose you as an app emergency contact.", fontWeight = FontWeight.Bold)
                         Text("Accept only if this is the person you expected. This does not add them as someone who receives your alerts.")
@@ -113,7 +136,6 @@ fun AppContactsScreen(viewModel: AppContactsViewModel, onAccount: () -> Unit, on
                 }
             }
         }
-        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back to SMS contacts") }
     }
 }
 

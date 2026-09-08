@@ -1,5 +1,13 @@
 # Verification and phone test checklist
 
+## UX update verification — 2026-09-08
+
+- Updated debug app and instrumentation APK compile. All 66 JVM tests pass; lint reports 0 errors and 32 warnings.
+- Latest update installed and launched on the Xiaomi phone, preserving its data. Device screenshots verified dashboard text, centred Bluetooth status, button spacing and the SMS page's back button above Android navigation.
+- Added compiled-only UI regression tests for the full SOS label at 1.3x text size and persistent Back navigation with a long contact list. Updated account UI tests to use the shared page frame. Instrumentation tests have not been executed.
+- New JVM tests cover invitation dialog state/session isolation and contact-picker drafts requiring explicit save. Native picker selection, invitation copy behaviour and keyboard/large-text combinations still need hands-on confirmation.
+- No real SOS or SMS was triggered during this UX verification. Private reference/device screenshots are excluded from Git.
+
 ## Review verification — 2026-09-08
 
 - Configured Android app: debug APK and instrumentation APK compile; 61 JVM tests pass; lint reports 0 errors and 32 warnings (mainly dependency/style notices).

@@ -1,7 +1,9 @@
 package com.example.emergencybutton.ui.screens
 
+import com.example.emergencybutton.ui.theme.SafeColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -60,7 +63,7 @@ fun EmergencyScreen(
     onEmergencyClick: () -> Unit
 ) {
     val pageBackground = Brush.verticalGradient(
-        listOf(Color(0xFFEAF5F6), Color(0xFFF8F9FB), Color(0xFFFFF5F3))
+        listOf(SafeColors.Background, Color(0xFFF9F5FF), SafeColors.WarmBackground)
     )
     val modeColor = when (mode) {
         ProtectionMode.ARMED -> Color(0xFF138A62)
@@ -68,8 +71,8 @@ fun EmergencyScreen(
         ProtectionMode.OFF -> Color(0xFF68747A)
     }
     val modeTitle = when (mode) {
-        ProtectionMode.ARMED -> "Protection armed"
-        ProtectionMode.LOW_POWER -> "Low power protection"
+        ProtectionMode.ARMED -> "Location cache: armed"
+        ProtectionMode.LOW_POWER -> "Location cache: low power"
         ProtectionMode.OFF -> "Location caching off"
     }
 
@@ -89,7 +92,7 @@ fun EmergencyScreen(
             Box(
                 modifier = Modifier
                     .size(42.dp)
-                    .background(Color(0xFF174A5B), CircleShape),
+                    .background(SafeColors.Primary, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -104,12 +107,12 @@ fun EmergencyScreen(
                     "SafeSignal",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF14343E)
+                    color = SafeColors.Ink
                 )
                 Text(
-                    "Help is one tap away",
+                    "Your personal SOS companion",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF557078)
+                    color = SafeColors.Muted
                 )
             }
         }
@@ -118,7 +121,7 @@ fun EmergencyScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF163C48)),
+            colors = CardDefaults.cardColors(containerColor = SafeColors.Panel),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -143,7 +146,7 @@ fun EmergencyScreen(
                     if (savedLocation == null) {
                         "No location has been saved yet"
                     } else {
-                        "Last location saved " +
+                        "Saved location: " +
                             locationAge(savedLocation.timestampMillis)
                     },
                     color = Color(0xFFC5DADF),
@@ -154,7 +157,7 @@ fun EmergencyScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Location cache frequency",
+            "Save a recent location",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF243A41)
@@ -193,10 +196,22 @@ fun EmergencyScreen(
                         )
                     }
                 } else {
-                    OutlinedButton(
+                    FilledTonalButton(
                         onClick = { onModeChange(option) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp)
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = when (option) {
+                                ProtectionMode.ARMED -> SafeColors.Mint
+                                ProtectionMode.LOW_POWER -> SafeColors.Amber
+                                ProtectionMode.OFF -> Color(0xFFE5E8ED)
+                            },
+                            contentColor = when (option) {
+                                ProtectionMode.ARMED -> SafeColors.Forest
+                                ProtectionMode.LOW_POWER -> SafeColors.Bronze
+                                ProtectionMode.OFF -> SafeColors.Muted
+                            }
+                        )
                     ) {
                         Text(
                             label,
@@ -213,7 +228,7 @@ fun EmergencyScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = SafeColors.Mint),
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -233,11 +248,12 @@ fun EmergencyScreen(
                             if (contacts.size == 1) " contact will be alerted"
                             else " contacts will be alerted",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF65777D)
+                        color = SafeColors.Muted
                     )
                 }
-                OutlinedButton(
+                FilledTonalButton(
                     onClick = onEditContacts,
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = SafeColors.Forest, contentColor = Color.White),
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text("Edit contacts", maxLines = 1)
@@ -306,7 +322,7 @@ fun EmergencyScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Surface(
+        if (status != "Ready") Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .border(1.dp, Color(0xFFD8E2E5), RoundedCornerShape(14.dp)),
@@ -317,7 +333,7 @@ fun EmergencyScreen(
                 text = status,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 textAlign = TextAlign.Center,
-                color = Color(0xFF52676E),
+                color = SafeColors.Muted,
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -327,9 +343,10 @@ fun EmergencyScreen(
             Button(
                 onClick = onEmergencyClick,
                 modifier = Modifier
-                    .size(132.dp)
+                    .size(120.dp)
                     .align(Alignment.CenterHorizontally),
                 shape = CircleShape,
+                contentPadding = PaddingValues(8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFD52B2B),
                     contentColor = Color.White
@@ -359,24 +376,27 @@ fun EmergencyScreen(
                 "Sends an emergency alert to every saved contact",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                color = Color(0xFF65777D),
+                color = SafeColors.Muted,
                 style = MaterialTheme.typography.bodySmall
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        OutlinedButton(
+        FilledTonalButton(
             onClick = onOpenButton,
+            colors = ButtonDefaults.filledTonalButtonColors(containerColor = SafeColors.Amber, contentColor = SafeColors.Bronze),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Column {
-                Text("Emergency button · Bluetooth", fontWeight = FontWeight.SemiBold)
-                Text(buttonStatus, style = MaterialTheme.typography.bodySmall)
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Emergency button · Bluetooth", fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+                Text(buttonStatus, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
             }
         }
-        OutlinedButton(
+        Spacer(modifier = Modifier.height(12.dp))
+        FilledTonalButton(
             onClick = onOpenSettings,
+            colors = ButtonDefaults.filledTonalButtonColors(containerColor = SafeColors.Lavender, contentColor = SafeColors.Plum),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp)
         ) {
