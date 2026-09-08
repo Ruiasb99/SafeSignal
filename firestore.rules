@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function participant(data) {
+      return data.fromUid == request.auth.uid || data.toUid == request.auth.uid;
+    }
+    function pending(data) {
+      return data.status == 'pending' && data.toUid == '' && data.expiresAt > request.time;
+    }
+    function ownName() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName;
+    }
+    match /users/{uid} {
+      allow get: if verified() && request.auth.uid == uid;
+      allow list, delete: if false;
+      allow create, update: if verified() && request.auth.uid == uid
+        && request.resource.data.keys().hasAll(['displayName', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'updatedAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.updatedAt == request.time;
+    }
+    match /contactInvitations/{code} {
+      // A private, random code is a bearer capability: share it only with the intended person.
+      // Knowing a live pending code permits preview and explicit acceptance, never listing others.
+      allow get: if verified() && (resource == null || participant(resource.data) || pending(resource.data));
+      allow list: if verified() && participant(resource.data);
+      allow create: if verified() && code.matches('^[a-f0-9]{32}$')
+        && request.resource.data.keys().hasAll(['fromUid', 'fromName', 'toUid', 'toName', 'status', 'createdAt', 'updatedAt', 'expiresAt'])
+        && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'toUid', 'toName', 'status', 'createdAt', 'updatedAt', 'expiresAt'])
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.fromName == ownName()
+        && request.resource.data.toUid == '' && request.resource.data.toName == ''
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(7, 'd');
+      allow update: if verified() && (
+        // Only the other person can claim a live invitation. A transaction resolves races.
+        (pending(resource.data) && resource.data.fromUid != request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['toUid', 'toName', 'status', 'updatedAt'])
+          && request.resource.data.toUid == request.auth.uid
+          && request.resource.data.toName == ownName()
+          && request.resource.data.status in ['accepted', 'declined']
+          && request.resource.data.updatedAt == request.time)
+        ||
+        // Either participant may permanently revoke. The sender may cancel an expired pending code.
+        (participant(resource.data) && resource.data.status in ['pending', 'accepted', 'declined']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+          && request.resource.data.status == 'revoked'
+          && request.resource.data.updatedAt == request.time)
+      );
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
